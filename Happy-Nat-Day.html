@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>🎂 สุขสันต์วันเกิดที่รัก! 🎂</title>
+<meta property="og:title" content="🎂 สุขสันต์วันเกิดนะคะเบบี๋! 🎂">
+<meta property="og:description" content="เค้ามีเกมพิเศษมาให้เบบี๋เล่นด้วย 💕">
+<meta property="og:image" content="https://img.icons8.com/color/480/birthday-cake.png"> 
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap');
+  
+  * {margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  :root {--pink:#ff6b9d; --purple:#c44dff; --gold:#ffd700; --bg1:#1a0030; --bg2:#2d0050}
+  
+  body {
+    font-family:'Prompt',sans-serif;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2),#0d001a);
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+    overflow-x:hidden; padding-bottom:30px;
+    color: white;
+  }
+
+  /* --- ANIMATED BACKGROUND --- */
+  .bg-hearts {position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:0}
+  .bg-heart {position:absolute; animation:floatUp linear infinite; opacity:0}
+  @keyframes floatUp {
+    0% {transform:translateY(110vh) rotate(0deg); opacity:0}
+    10% {opacity:0.35}
+    90% {opacity:0.15}
+    100% {transform:translateY(-10vh) rotate(360deg); opacity:0}
+  }
+  
+  .star-bg {position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:0}
+  .star-dot {position:absolute; color:var(--gold); animation:twinkle 2s ease-in-out infinite}
+  @keyframes twinkle {
+    0%,100% {opacity:0.15; transform:scale(0.7)}
+    50% {opacity:0.9; transform:scale(1.3)}
+  }
+
+  /* --- UI COMPONENTS --- */
+  #splash, #game-wrap, #win-overlay, #lose-overlay, #level-overlay, #pre-win-overlay {
+      transition: opacity 0.5s;
+  }
+
+  #splash {
+    position:fixed; inset:0; z-index:100;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:linear-gradient(145deg,#1a0030,#3d006b,#1a0030);
+    padding:30px; text-align:center;
+  }
+  .splash-cake {font-size:85px; filter:drop-shadow(0 0 30px rgba(255,215,0,0.9)); animation:bounce 1.2s ease-in-out infinite alternate; margin-bottom:12px}
+  @keyframes bounce {from{transform:translateY(0) scale(1)} to{transform:translateY(-14px) scale(1.08)}}
+  
+  .splash-title {font-size:2rem; font-weight:800; color:var(--gold); text-shadow:0 0 30px rgba(255,215,0,0.8); line-height:1.25; margin-bottom:8px}
+  .splash-sub {font-size:0.95rem; color:rgba(255,255,255,0.7); line-height:1.8; margin-bottom:22px}
+  
+  .btn-start {
+    background:linear-gradient(135deg,var(--pink),var(--purple)); color:white;
+    border:none; padding:16px 30px; font-size:1.2rem; font-family:'Prompt',sans-serif; font-weight:700;
+    border-radius:50px; cursor:pointer;
+    box-shadow:0 4px 25px rgba(255,107,157,0.6);
+    animation:pulse 1.5s ease-in-out infinite; letter-spacing:1px;
+    transition: transform 0.2s;
+  }
+  .btn-start:active {transform: scale(0.95);}
+  
+  .btn-small {
+    padding: 10px 24px;
+    font-size: 1rem;
+    margin-top: 10px;
+  }
+
+  @keyframes pulse {
+    0%,100% {transform:scale(1); box-shadow:0 4px 25px rgba(255,107,157,0.6)}
+    50% {transform:scale(1.05); box-shadow:0 4px 40px rgba(255,107,157,0.9)}
+  }
+
+  /* --- GAME BOARD --- */
+  #game-wrap {
+    position:relative; z-index:1; width:100%; max-width:420px;
+    display:none; flex-direction:column; align-items:center; padding:12px 10px;
+    margin-top: 20px;
+  }
+  .game-header {width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding:0 4px}
+  .header-title {font-size:1.1rem; font-weight:800; color:var(--gold); text-shadow:0 0 15px rgba(255,215,0,0.7); line-height:1.2; text-align: left;}
+  
+  .stat-box {background:rgba(255,255,255,0.1); border:1px solid rgba(255,107,157,0.25); border-radius:14px; padding:5px 12px; text-align:center; min-width: 70px;}
+  .stat-label {font-size:0.6rem; color:#ffb3d1; letter-spacing:1px; text-transform:uppercase}
+  .stat-val {font-size:1.4rem; font-weight:800; color:white; line-height:1}
+
+  .target-line {font-size:0.9rem; color:#ffb3d1; margin-bottom:8px; font-weight: 600;}
+  .progress-wrap {width:100%; background:rgba(255,255,255,0.1); border-radius:20px; height:12px; margin-bottom:15px; overflow:hidden; border:1px solid rgba(255,107,157,0.3)}
+  .progress-bar {
+    height:100%; width:0%;
+    background:linear-gradient(90deg,var(--pink),var(--purple),var(--gold));
+    border-radius:20px; transition:width 0.5s ease;
+    background-size:200% 100%; animation:shimmer 2s linear infinite;
+  }
+  @keyframes shimmer {from{background-position:0} to{background-position:200% 0}}
+
+  #board {
+    display:grid; grid-template-columns:repeat(7,1fr); gap:4px;
+    width:100%; aspect-ratio: 1;
+    background:rgba(255,255,255,0.05); border:2px solid rgba(255,107,157,0.3);
+    border-radius:18px; padding:8px;
+    box-shadow:0 0 40px rgba(196,77,255,0.15);
+  }
+  .cell {
+    border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:clamp(18px, 5.5vw, 32px); cursor:pointer; user-select:none;
+    background:rgba(255,255,255,0.08); transition:transform 0.15s ease;
+    position: relative;
+  }
+  .cell:active {transform:scale(0.9)}
+  .cell.selected {
+    background:rgba(255,107,157,0.4); border:2px solid var(--gold);
+    transform:scale(1.1); z-index:10; box-shadow: 0 0 10px var(--gold);
+  }
+  
+  .cell.hint {
+      animation: pulseHint 1s infinite;
+      border: 2px solid #00ff00;
+      background: rgba(0, 255, 0, 0.2);
+  }
+  @keyframes pulseHint {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); filter: brightness(1.5); }
+      100% { transform: scale(1); }
+  }
+
+  .cell.matched {animation:popOut 0.4s ease forwards}
+  @keyframes popOut {0%{transform:scale(1)} 50%{transform:scale(1.4); opacity:0.8} 100%{transform:scale(0); opacity:0}}
+  
+  .cell.fall {animation:fallIn 0.3s ease forwards}
+  @keyframes fallIn {from{transform:translateY(-50%); opacity:0} to{transform:translateY(0); opacity:1}}
+
+  /* Obstacle Styles */
+  .rock { background: #444 !important; border: 2px solid #222; color: transparent; cursor: not-allowed; }
+  .rock::after { content: '🪨'; font-size: clamp(16px, 5vw, 28px); color: #999; }
+  .ice { background: rgba(200, 240, 255, 0.5) !important; border: 2px solid #fff; }
+  .ice::before { content: '🧊'; position: absolute; font-size: 10px; top: 2px; right: 2px; opacity: 0.8; }
+
+  /* --- BUTTONS --- */
+  .btn-row {display:flex; gap:10px; margin-top:20px; width:100%}
+  .btn-action {
+    flex:1; padding:12px; border:none; border-radius:12px;
+    font-family:'Prompt',sans-serif; font-weight:700; font-size:0.9rem; cursor:pointer;
+    transition: transform 0.1s;
+  }
+  .btn-hint {background:var(--gold); color:#1a0030; box-shadow:0 4px 0 #b8860b; flex: 1.6;} 
+  .btn-restart {background:#ff4757; color:white; box-shadow:0 4px 0 #c0392b; flex: 0.9;}
+  .btn-action:active {transform: translateY(4px); box-shadow: none;}
+
+  /* --- KISS EFFECT --- */
+  .kiss-effect {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    font-size: 6rem;
+    z-index: 9999;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    animation: kissPopup 1s ease-out forwards;
+    filter: drop-shadow(0 0 15px rgba(255, 105, 180, 0.8));
+  }
+  @keyframes kissPopup {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    20% { transform: translate(-50%, -50%) scale(1.3) rotate(-15deg); opacity: 1; }
+    40% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -150%) scale(1.5); opacity: 0; }
+  }
+
+  /* --- OVERLAYS --- */
+  #win-overlay, #lose-overlay, #level-overlay, #pre-win-overlay {
+    display:none; position:fixed; inset:0; z-index:200;
+    flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.95); backdrop-filter:blur(10px);
+    text-align:center; padding:20px;
+  }
+  #win-overlay.show, #lose-overlay.show, #level-overlay.show, #pre-win-overlay.show {display:flex;}
+
+  .win-card {
+    background: linear-gradient(135deg, #2d0050, #1a0030);
+    border: 2px solid var(--gold); border-radius: 20px;
+    padding: 5px; width: 100%; max-width: 350px;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+    overflow: hidden; position: relative;
+  }
+  .win-photo {
+    width: 100%; height: 350px; 
+    object-fit: cover; object-position: center;
+    border-radius: 15px 15px 0 0; display: block;
+  }
+  .win-details {padding: 20px;}
+  .win-title {font-size: 1.8rem; color: var(--gold); margin-bottom: 10px; font-weight: 800;}
+  .win-msg {font-size: 1rem; color: #ffb3d1; margin-bottom: 15px; line-height: 1.5;}
+
+  .score-popup {
+    position:fixed; pointer-events:none; font-size:1.5rem; font-weight:800;
+    color:var(--gold); text-shadow:0 0 10px rgba(0,0,0,0.5); z-index:500;
+    animation:floatScore 0.8s ease forwards;
+  }
+  @keyframes floatScore {0%{transform:translateY(0); opacity:1} 100%{transform:translateY(-80px); opacity:0}}
+  
+  .hbd-header {
+      position: absolute; top: 15px; left: 0; right: 0;
+      text-align: center; color: white;
+      font-size: 1.5rem; font-weight: 800;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+      z-index: 10; pointer-events: none;
+      background: rgba(0,0,0,0.3); padding: 5px 0;
+  }
+
+  .pulse-text { animation: pulseText 2s infinite; }
+  @keyframes pulseText { 0% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.8; transform: scale(1); } }
+
+  .confetti {position:fixed; width:10px; height:10px; top:-10px; z-index:300; animation:fall linear forwards;}
+  @keyframes fall {to{transform:translateY(110vh) rotate(720deg);}}
+  
+  #sound-control { position: absolute; top: 10px; right: 10px; font-size: 24px; cursor: pointer; z-index: 200; opacity: 0.7; }
+
+  /* Notification for Reshuffle */
+  #reshuffle-noti {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8); color: var(--gold); padding: 15px 30px;
+    border-radius: 30px; font-size: 1.2rem; font-weight: bold;
+    z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+    border: 2px solid var(--gold);
+  }
+  #reshuffle-noti.show { opacity: 1; }
+
+</style>
+</head>
+<body>
+
+<div class="bg-hearts" id="bgHearts"></div>
+<div class="star-bg" id="starBg"></div>
+
+<div id="sound-control" onclick="toggleMute()">🔊</div>
+
+<div id="reshuffle-noti">ไม่มีทางไปต่อ... สลับกระดานใหม่! 🔄</div>
+
+<div id="splash">
+  <div class="splash-cake">🎂</div>
+  <div class="splash-title">Happy Birthday<br>คุณภรรยา 💕</div>
+  <div class="splash-sub">วันนี้เป็นวันพิเศษ<br>ขอให้มีความสุขนะคะ 🌸</div>
+  <button class="btn-start" onclick="startGame()">🎮 เริ่มเล่นเบย!</button>
+</div>
+
+<div id="game-wrap">
+  <div class="game-header">
+    <div class="header-title">🎂 Level <span id="levelDisplay">1</span><br><span style="font-size:0.8em; opacity:0.8;">Birthday Crush!</span></div>
+    <div class="stat-box">
+      <div class="stat-label">Score</div>
+      <div class="stat-val" id="scoreVal">0</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">Moves</div>
+      <div class="stat-val" id="movesVal">15</div>
+    </div>
+  </div>
+
+  <div class="target-line">🎯 เป้าหมาย: <span id="targetVal">300</span> คะแนน</div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+  <div id="board"></div>
+
+  <div class="btn-row">
+    <button class="btn-action btn-hint" onclick="findAndShowHint()">💡 ให้ช่วยร๋อ? ต้องโดน 1 จุ๊บนะคะ</button>
+    <button class="btn-action btn-restart" onclick="restartLevel()">🔄 เริ่มด่านใหม่</button>
+  </div>
+</div>
+
+<div id="level-overlay">
+    <div style="font-size: 4rem; margin-bottom: 10px;">🎉</div>
+    <h2 style="color: var(--gold); margin-bottom: 10px;">ด่าน <span id="completedLevel">1</span> ผ่านแล้ว!</h2>
+    <p style="color: #ddd; margin-bottom: 20px;">โคตรเก่ง โคตรอันตราย! ไปลุยด่านต่อไปกันเลย 💕</p>
+    <button class="btn-start" onclick="nextLevel()">ด่านต่อไป ➡️</button>
+</div>
+
+<div id="pre-win-overlay">
+    <div style="font-size: 5rem; margin-bottom: 20px;">🎁</div>
+    <h1 style="color: var(--gold); margin-bottom: 20px; line-height: 1.4;">จบทุกด่านแล้ว! 🎉</h1>
+    <p class="pulse-text" style="color: white; font-size: 1.5rem; margin-bottom: 30px;">ของขวัญวันเกิดปีนี้ก็คือ...</p>
+    <button class="btn-start" onclick="showFinalReveal()">🎁 เปิดรางวัล</button>
+</div>
+
+<div id="win-overlay">
+  <div class="win-card">
+    <div class="hbd-header">🎂 HAPPY BIRTHDAY 🎂</div>
+    <img class="win-photo" src="57644.png" alt="Happy Birthday">
+    <div class="win-details">
+        <div class="win-title">ความรักของเค้านั่นเอง เย้!!! 💕</div>
+        <div class="win-msg" id="winMsg">ขอให้มีความสุขมากๆ นะคะ<br>รักนะคะ 💖</div>
+        <button class="btn-start btn-small" onclick="hideWin(); resetGameFull();">อยากเล่นใหม่ ก็กดเล๊ย 💕</button>
+    </div>
+  </div>
+</div>
+
+<div id="lose-overlay">
+  <div style="font-size: 4rem; margin-bottom: 10px;">😢</div>
+  <h2 style="color: #ff4757; margin-bottom: 10px;">ว๊ายยย สงสัยจะอดรางวัล...</h2>
+  <p style="color: #ddd; margin-bottom: 20px;">ไม่เป็นไรนะคนเก่ง ลองใหม่อีกที!</p>
+  <button class="btn-start" onclick="hideLose(); restartLevel();">💪 สู้ใหม่!</button>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+const ROWS = 7;
+const COLS = 7;
+const ITEMS = ['🎀','🍭','🌸','⭐','💎','🍬','🎁']; 
+const OBSTACLE_ROCK = 'ROCK'; 
+const OBSTACLE_ICE = 'ICE';
+
+// ระดับความยาก (300 คะแนนทุกด่าน, 10 Move ทุกด่าน)
+const LEVELS = [
+    { target: 300, moves: 10, type: 'normal', count: 0 },
+    { target: 300, moves: 10, type: 'rock', count: 5 },
+    { target: 300, moves: 10, type: 'ice', count: 8 }
+];
+
+// --- STATE ---
+let currentLevel = 0;
+let board = [];
+let locks = []; // 0:None, 1:Rock, 2:Ice
+let score = 0;
+let moves = 0;
+let selectedCell = null;
+let isLocked = false;
+let isMuted = false;
+let hintTimeout = null;
+
+// --- AUDIO SYSTEM ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSynth(type) {
+    if(isMuted) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    
+    if (type === 'select') {
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if (type === 'match') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } else if (type === 'win') {
+        const notes = [523.25, 659.25, 783.99, 1046.50]; 
+        notes.forEach((freq, i) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.1, now + i*0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.5);
+            o.start(now + i*0.1);
+            o.stop(now + i*0.1 + 0.5);
+        });
+    } else if (type === 'crack') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    } else if (type === 'kiss') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
+}
+
+function toggleMute() {
+    isMuted = !isMuted;
+    document.getElementById('sound-control').innerText = isMuted ? '🔇' : '🔊';
+}
+
+function createBgHearts() {
+    const container = document.getElementById('bgHearts');
+    const emojis = ['💕','💖','✨','🌸','⭐'];
+    for(let i=0; i<15; i++){
+        const el = document.createElement('div');
+        el.className = 'bg-heart';
+        el.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+        el.style.left = Math.random()*100 + '%';
+        el.style.animationDuration = (5 + Math.random()*10) + 's';
+        el.style.animationDelay = (Math.random()*5) + 's';
+        el.style.fontSize = (10 + Math.random()*20) + 'px';
+        container.appendChild(el);
+    }
+}
+
+function startGame() {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('game-wrap').style.display = 'flex';
+    createBgHearts();
+    
+    currentLevel = 0;
+    startLevel(currentLevel);
+    
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function startLevel(levelIndex) {
+    const config = LEVELS[levelIndex];
+    score = 0;
+    moves = config.moves;
+    
+    document.getElementById('levelDisplay').innerText = levelIndex + 1;
+    document.getElementById('targetVal').innerText = config.target;
+    
+    // สร้างกระดานจนกว่าจะแน่ใจว่ามีทางให้เดิน
+    do {
+        initBoard(config);
+    } while (!hasAnyValidMove());
+
+    renderBoard();
+    updateUI();
+}
+
+function initBoard(config) {
+    board = [];
+    locks = []; 
+    
+    for(let r=0; r<ROWS; r++){
+        let row = [];
+        let lockRow = [];
+        for(let c=0; c<COLS; c++){
+            let item;
+            do {
+                item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+            } while (
+                (c >= 2 && row[c-1] === item && row[c-2] === item) ||
+                (r >= 2 && board[r-1][c] === item && board[r-2][c] === item)
+            );
+            row.push(item);
+            lockRow.push(0);
+        }
+        board.push(row);
+        locks.push(lockRow);
+    }
+    
+    let placed = 0;
+    while(placed < config.count) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if(locks[r][c] === 0) {
+            if(config.type === 'rock') {
+                locks[r][c] = 1; 
+                board[r][c] = null; 
+            } else if(config.type === 'ice') {
+                locks[r][c] = 2; 
+            }
+            placed++;
+        }
+    }
+}
+
+function renderBoard() {
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    for(let r=0; r<ROWS; r++){
+        for(let c=0; c<COLS; c++){
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            
+            if (locks[r][c] === 1) { 
+                cell.classList.add('rock');
+            } else {
+                cell.innerText = board[r][c] || '';
+                if(locks[r][c] === 2) cell.classList.add('ice');
+            }
+            
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            
+            if(selectedCell && selectedCell.r === r && selectedCell.c === c){
+                cell.classList.add('selected');
+            }
+            
+            if (locks[r][c] !== 1 && locks[r][c] !== 2) {
+                cell.onclick = () => handleInput(r, c);
+            } else if (locks[r][c] === 2) {
+                cell.onclick = () => {
+                    cell.style.animation = 'none';
+                    cell.offsetHeight; 
+                    cell.style.animation = 'shake 0.4s';
+                };
+            }
+            
+            boardEl.appendChild(cell);
+        }
+    }
+}
+
+async function handleInput(r, c) {
+    if(isLocked) return;
+    
+    document.querySelectorAll('.hint').forEach(el => el.classList.remove('hint'));
+    
+    if(!selectedCell) {
+        selectedCell = {r, c};
+        playSynth('select');
+        renderBoard();
+    } else {
+        const r1 = selectedCell.r;
+        const c1 = selectedCell.c;
+        
+        if(r1 === r && c1 === c) {
+            selectedCell = null;
+            renderBoard();
+            return;
+        }
+
+        selectedCell = null;
+        renderBoard();
+        
+        const dr = Math.abs(r - r1);
+        const dc = Math.abs(c - c1);
+        
+        if((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+            if(locks[r1][c1] === 2 || locks[r][c] === 2 || locks[r1][c1] === 1 || locks[r][c] === 1) return;
+
+            moves--;
+            updateUI();
+            await swap(r1, c1, r, c);
+            
+            const matches = findMatches();
+            if(matches.length > 0) {
+                await processMatches(matches);
+            } else {
+                await swap(r1, c1, r, c); 
+            }
+            checkState();
+        } else {
+            selectedCell = {r, c};
+            playSynth('select');
+            renderBoard();
+        }
+    }
+}
+
+async function swap(r1, c1, r2, c2) {
+    isLocked = true;
+    let temp = board[r1][c1];
+    board[r1][c1] = board[r2][c2];
+    board[r2][c2] = temp;
+    renderBoard();
+    await new Promise(resolve => setTimeout(resolve, 250));
+    isLocked = false;
+}
+
+function findMatches() {
+    let matchedSet = new Set();
+    for(let r=0; r<ROWS; r++){
+        for(let c=0; c<COLS-2; c++){
+            let val = board[r][c];
+            if(!val || locks[r][c] === 1) continue;
+            if(board[r][c+1] === val && board[r][c+2] === val && locks[r][c+1] !== 1 && locks[r][c+2] !== 1){
+                matchedSet.add(`${r},${c}`);
+                matchedSet.add(`${r},${c+1}`);
+                matchedSet.add(`${r},${c+2}`);
+            }
+        }
+    }
+    for(let c=0; c<COLS; c++){
+        for(let r=0; r<ROWS-2; r++){
+            let val = board[r][c];
+            if(!val || locks[r][c] === 1) continue;
+            if(board[r+1][c] === val && board[r+2][c] === val && locks[r+1][c] !== 1 && locks[r+2][c] !== 1){
+                matchedSet.add(`${r},${c}`);
+                matchedSet.add(`${r+1},${c}`);
+                matchedSet.add(`${r+2},${c}`);
+            }
+        }
+    }
+    return Array.from(matchedSet).map(s => {
+        let [r, c] = s.split(',').map(Number);
+        return {r, c};
+    });
+}
+
+// === ระบบ Effect จุ๊บหน้าจอ ===
+function spawnKiss() {
+    playSynth('kiss');
+    
+    const kiss = document.createElement('div');
+    kiss.className = 'kiss-effect';
+    kiss.innerText = '💋';
+    
+    const offsetX = (Math.random() - 0.5) * 100;
+    const offsetY = (Math.random() - 0.5) * 100;
+    kiss.style.marginLeft = offsetX + 'px';
+    kiss.style.marginTop = offsetY + 'px';
+    
+    document.body.appendChild(kiss);
+    setTimeout(() => kiss.remove(), 1000);
+}
+
+// === ตรวจสอบว่ามีทางให้เดินต่อได้หรือไม่ ===
+function hasAnyValidMove() {
+    for(let r=0; r<ROWS; r++){
+        for(let c=0; c<COLS-1; c++){
+            if(checkPotentialSwap(r, c, r, c+1)) return true;
+        }
+    }
+    for(let r=0; r<ROWS-1; r++){
+        for(let c=0; c<COLS; c++){
+            if(checkPotentialSwap(r, c, r+1, c)) return true;
+        }
+    }
+    return false;
+}
+
+// === Smart Hint + Kiss Effect ===
+function findAndShowHint() {
+    spawnKiss();
+    
+    document.querySelectorAll('.hint').forEach(el => el.classList.remove('hint'));
+
+    for(let r=0; r<ROWS; r++){
+        for(let c=0; c<COLS-1; c++){
+            if(checkPotentialSwap(r, c, r, c+1)) {
+                highlightHint(r, c, r, c+1);
+                return;
+            }
+        }
+    }
+    for(let r=0; r<ROWS-1; r++){
+        for(let c=0; c<COLS; c++){
+            if(checkPotentialSwap(r, c, r+1, c)) {
+                highlightHint(r, c, r+1, c);
+                return;
+            }
+        }
+    }
+}
+
+function checkPotentialSwap(r1, c1, r2, c2) {
+    if(locks[r1][c1] !== 0 || locks[r2][c2] !== 0) return false; 
+    if(!board[r1][c1] || !board[r2][c2]) return false;
+
+    let t = board[r1][c1];
+    board[r1][c1] = board[r2][c2];
+    board[r2][c2] = t;
+    const matches = findMatches();
+    t = board[r1][c1];
+    board[r1][c1] = board[r2][c2];
+    board[r2][c2] = t;
+    return matches.length > 0;
+}
+
+function highlightHint(r1, c1, r2, c2) {
+    const cells = document.querySelectorAll('.cell');
+    const idx1 = r1 * COLS + c1;
+    const idx2 = r2 * COLS + c2;
+    if(cells[idx1]) cells[idx1].classList.add('hint');
+    if(cells[idx2]) cells[idx2].classList.add('hint');
+    
+    if(hintTimeout) clearTimeout(hintTimeout);
+    hintTimeout = setTimeout(() => {
+        document.querySelectorAll('.hint').forEach(el => el.classList.remove('hint'));
+    }, 2000);
+}
+
+async function processMatches(matches) {
+    isLocked = true;
+    playSynth('match');
+    
+    let points = matches.length * 10;
+    score += points;
+    updateUI();
+    showPopupScore(points);
+    
+    const domCells = document.querySelectorAll('.cell');
+    matches.forEach(m => {
+        let idx = m.r * COLS + m.c;
+        if(domCells[idx]) domCells[idx].classList.add('matched');
+        
+        if(locks[m.r][m.c] === 2) {
+            locks[m.r][m.c] = 0;
+            playSynth('crack');
+        }
+    });
+    
+    destroyObstacles(matches);
+
+    await new Promise(r => setTimeout(r, 400));
+    
+    matches.forEach(m => { board[m.r][m.c] = null; });
+    
+    dropItems();
+    renderBoard();
+    await new Promise(r => setTimeout(r, 300));
+    
+    let newMatches = findMatches();
+    if(newMatches.length > 0) {
+        await processMatches(newMatches);
+    } else {
+        // ไม่มีให้ล้างต่อเนื่องแล้ว เช็คว่ากระดานตันไหม
+        if (!hasAnyValidMove() && score < LEVELS[currentLevel].target) {
+            // โชว์แจ้งเตือนแล้วสับกระดาน
+            const noti = document.getElementById('reshuffle-noti');
+            noti.classList.add('show');
+            await new Promise(r => setTimeout(r, 1500));
+            noti.classList.remove('show');
+            
+            // สับกระดานจนกว่าจะมีทางเดิน
+            do {
+                reshuffleBoard();
+            } while (!hasAnyValidMove());
+            
+            renderBoard();
+        }
+    }
+    isLocked = false;
+}
+
+// === สับกระดานเฉพาะไอเทมที่ขยับได้ (หิน/น้ำแข็งอยู่ที่เดิม) ===
+function reshuffleBoard() {
+    let movableItems = [];
+    // เก็บไอเทมที่ขยับได้ทั้งหมด
+    for(let r=0; r<ROWS; r++){
+        for(let c=0; c<COLS; c++){
+            if(locks[r][c] === 0 && board[r][c] !== null) {
+                movableItems.push(board[r][c]);
+            }
+        }
+    }
+    // สลับตำแหน่งใน Array
+    movableItems.sort(() => Math.random() - 0.5);
+    
+    // ใส่กลับคืน
+    let idx = 0;
+    for(let r=0; r<ROWS; r++){
+        for(let c=0; c<COLS; c++){
+            if(locks[r][c] === 0 && board[r][c] !== null) {
+                board[r][c] = movableItems[idx++];
+            }
+        }
+    }
+}
+
+function destroyObstacles(matches) {
+    const dirs = [[-1,0], [1,0], [0,-1], [0,1]];
+    matches.forEach(m => {
+        dirs.forEach(d => {
+            let nr = m.r + d[0];
+            let nc = m.c + d[1];
+            if(nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                if(locks[nr][nc] === 1) { 
+                    locks[nr][nc] = 0;
+                    playSynth('crack');
+                    score += 20;
+                }
+            }
+        });
+    });
+    updateUI();
+}
+
+function dropItems() {
+    for(let c=0; c<COLS; c++) {
+        let emptySpots = 0;
+        for(let r=ROWS-1; r>=0; r--) {
+            if(board[r][c] === null) {
+                emptySpots++;
+            } else if(emptySpots > 0) {
+                if(locks[r][c] === 1) { 
+                     emptySpots = 0;
+                } else {
+                    board[r + emptySpots][c] = board[r][c];
+                    locks[r + emptySpots][c] = locks[r][c]; 
+                    
+                    board[r][c] = null;
+                    if(locks[r][c] !== 1) locks[r][c] = 0;
+                }
+            }
+        }
+        for(let r=0; r<emptySpots; r++) {
+            if(locks[r][c] !== 1) {
+                board[r][c] = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+                locks[r][c] = 0;
+            }
+        }
+        for(let r=0; r<ROWS; r++) {
+             if(board[r][c] === null && locks[r][c] !== 1) {
+                 board[r][c] = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+             }
+        }
+    }
+}
+
+function updateUI() {
+    const config = LEVELS[currentLevel];
+    document.getElementById('scoreVal').innerText = score;
+    document.getElementById('movesVal').innerText = moves;
+    const pct = Math.min(100, (score / config.target) * 100);
+    document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function showPopupScore(val) {
+    const el = document.createElement('div');
+    el.className = 'score-popup';
+    el.innerText = '+' + val;
+    el.style.left = '50%';
+    el.style.top = '40%';
+    el.style.transform = 'translate(-50%, -50%)';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+}
+
+function checkState() {
+    const config = LEVELS[currentLevel];
+    
+    if(score >= config.target) {
+        setTimeout(levelComplete, 500);
+    } else if(moves <= 0) {
+        setTimeout(loseGame, 500);
+    }
+}
+
+function levelComplete() {
+    playSynth('win');
+    if (currentLevel < LEVELS.length - 1) {
+        document.getElementById('completedLevel').innerText = currentLevel + 1;
+        document.getElementById('level-overlay').classList.add('show');
+    } else {
+        winGameFull();
+    }
+}
+
+function nextLevel() {
+    document.getElementById('level-overlay').classList.remove('show');
+    currentLevel++;
+    startLevel(currentLevel);
+}
+
+function winGameFull() {
+    document.getElementById('pre-win-overlay').classList.add('show');
+    playSynth('win');
+}
+
+function showFinalReveal() {
+    document.getElementById('pre-win-overlay').classList.remove('show');
+    document.getElementById('win-overlay').classList.add('show');
+    launchConfetti();
+    playSynth('win');
+}
+
+function loseGame() {
+    document.getElementById('lose-overlay').classList.add('show');
+}
+
+function hideWin() { document.getElementById('win-overlay').classList.remove('show'); }
+function hideLose() { document.getElementById('lose-overlay').classList.remove('show'); }
+
+function restartLevel() {
+    hideLose();
+    startLevel(currentLevel); 
+}
+
+function resetGameFull() {
+    hideWin();
+    currentLevel = 0;
+    startLevel(0);
+}
+
+function launchConfetti() {
+    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f'];
+    for(let i=0; i<50; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        c.style.left = Math.random()*100 + 'vw';
+        c.style.animationDuration = (2 + Math.random()*3) + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 5000);
+    }
+}
+</script>
+</body>
+</html>
